@@ -24,4 +24,3 @@ app.include_router(user_routes.router)
 def raiz():
     """Endpoint de bienvenida, solo para confirmar que la API está viva."""
     return {"mensaje": "Bienvenido a device_systems API. Visita /docs para ver la documentación."}
-```

@@ -1,25 +1,42 @@
-from typing import Literal
+"""
+schemas/user_schema.py
+
+Modelos Pydantic de entrada y salida para el recurso 'users'.
+"""
+
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
-    """Campos comunes a todo usuario, compartidos entre entrada y salida."""
-
-    name: str = Field(..., min_length=3, description="Nombre completo del usuario")
-    email: EmailStr = Field(..., description="Correo electrónico único del usuario")
-    role: Literal["admin", "support", "user"] = Field(..., description="Rol del usuario en el sistema")
-    is_active: bool = Field(default=True, description="Indica si el usuario está activo")
+    name: str = Field(..., min_length=2, max_length=50)
+    email: EmailStr
+    role: str
+    is_active: bool = True
 
 
 class UserCreate(UserBase):
-    """Modelo de ENTRADA: lo que se recibe en el body del POST /users."""
+    """Modelo usado en POST /users"""
     pass
 
 
+class UserUpdate(UserBase):
+    """Modelo usado en PUT /users/{user_id} (actualización completa)"""
+    pass
+
+
+class UserPatch(BaseModel):
+    """Modelo usado en PATCH /users/{user_id} (actualización parcial).
+    Todos los campos son opcionales."""
+    name: Optional[str] = Field(None, min_length=2, max_length=50)
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class UserResponse(UserBase):
-    """Modelo de SALIDA: lo que la API devuelve (incluye el id generado)."""
+    """Modelo usado para las respuestas de la API"""
+    id: int
 
-    id: int = Field(..., description="Identificador único del usuario")
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

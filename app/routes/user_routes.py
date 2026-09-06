@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.schemas.user_schema import UserCreate, UserResponse
+from app.schemas.user_schema import UserCreate, UserPatch, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Usuarios"])
 
@@ -60,3 +60,89 @@ def crear_usuario(usuario: UserCreate):
 
     usuarios_db.append(nuevo_usuario)
     return nuevo_usuario
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+def actualizar_usuario(user_id: int, usuario: UserUpdate):
+    usuario_encontrado = None
+    for u in usuarios_db:
+        if u["id"] == user_id:
+            usuario_encontrado = u
+            break
+
+    if usuario_encontrado is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No existe un usuario con id {user_id}",
+        )
+
+    correo_en_uso = any(
+        u["email"] == usuario.email and u["id"] != user_id for u in usuarios_db
+    )
+    if correo_en_uso:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ya existe un usuario registrado con el correo {usuario.email}",
+        )
+
+    usuario_encontrado["name"] = usuario.name
+    usuario_encontrado["email"] = usuario.email
+    usuario_encontrado["role"] = usuario.role
+    usuario_encontrado["is_active"] = usuario.is_active
+
+    return usuario_encontrado
+
+
+@router.patch("/{user_id}", response_model=UserResponse)
+def actualizar_usuario_parcial(user_id: int, usuario: UserPatch):
+    usuario_encontrado = None
+    for u in usuarios_db:
+        if u["id"] == user_id:
+            usuario_encontrado = u
+            break
+
+    if usuario_encontrado is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No existe un usuario con id {user_id}",
+        )
+
+    datos_actualizados = usuario.model_dump(exclude_unset=True)
+
+    if not datos_actualizados:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se enviaron campos para actualizar",
+        )
+
+    if "email" in datos_actualizados:
+        correo_en_uso = any(
+            u["email"] == datos_actualizados["email"] and u["id"] != user_id
+            for u in usuarios_db
+        )
+        if correo_en_uso:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ya existe un usuario registrado con el correo {datos_actualizados['email']}",
+            )
+
+    usuario_encontrado.update(datos_actualizados)
+    return usuario_encontrado
+
+
+@router.delete("/{user_id}")
+def eliminar_usuario(user_id: int):
+    usuario_encontrado = None
+    for u in usuarios_db:
+        if u["id"] == user_id:
+            usuario_encontrado = u
+            break
+
+    if usuario_encontrado is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No existe un usuario con id {user_id}",
+        )
+
+    usuarios_db.remove(usuario_encontrado)
+    return {"detail": f"Usuario con id {user_id} eliminado correctamente"}

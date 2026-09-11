@@ -1,6 +1,9 @@
 from fastapi import FastAPI
  
 from app.routes.user_routes import router as user_router
+
+from app.database.connection import create_tables
+from app.models.user_model import Usuario
  
 app = FastAPI(
     title="device_systems API",
@@ -16,7 +19,9 @@ app = FastAPI(
         "email": "juan@example.com",
     },
 )
- 
+
+create_tables()
+
 app.include_router(user_router)
  
  

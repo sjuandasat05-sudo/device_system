@@ -259,6 +259,26 @@ Todos los endpoints
 
 ![alt text](image-4.png)
 
+Se elimino el consumo de datos en memoria para implementar el SQLite
+y se ajusto el codigo.
+
+Se borro el archivo users_db.py por consumo en memoria.
+
+
+
+TECNOLOGIAS UTILIZADAS
+
+-Python 3.13
+
+-FastAPI
+
+-SQLAlchemy
+
+-SQLite
+
+-Pydantic
+
+-Uvicorn
 
 
 AUTOR:JUAN DAVID SALAZAR TORRES

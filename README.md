@@ -128,6 +128,139 @@ Token faltante o inválido, en el DELETE, si no se manda el header x-token corre
 Datos inválidos en general, esto último no lo manejo yo manualmente: Pydantic ya se encarga de validar tipos de datos, campos obligatorios y formatos (como el correo), y automáticamente responde 422 cuando algo no cuadra.
 
 
+Siguiente parte
+
+Base de datos
+
+El proyecto utiliza SQLite 
+
+La conexion esta configurada en:
+
+DATABASE_URL = "sqlite:///./app.db"
+
+Al iniciar la aplicacion ,SQLAlchemy crea las tablas definidas en los modelos
+
+La tabla principal utilizada para los usuarios es:
+
+usuarios
+
+
+Endpoints principales
+
+Obtener usuarios
+
+GET /users
+
+Obtiene la lista de usuarios registrados.
+
+Obtener un usuario
+
+GET /users/{id}
+
+Obtiene un usuario específico mediante su ID.
+
+Ejemplo:
+
+GET /users/1
+
+Crear usuario
+
+POST /users
+
+Ejemplo de datos:
+
+{
+  "nombre": "Carlos Rodriguez",
+  "email": "carlos.rodriguez@gmail.com",
+  "telefono": "3204567890",
+  "activo": true,
+  "es_admin": false
+}
+
+Actualizar usuario
+
+PUT /users/{id}
+
+Actualiza los datos de un usuario existente.
+
+Actualización parcial
+
+PATCH /users/{id}
+
+Permite modificar solamente algunos campos del usuario.
+
+Eliminar usuario
+
+DELETE /users/{id}
+
+Elimina un usuario mediante su ID.
+
+Modelo de usuario
+
+El modelo Usuario contiene los siguientes campos:
+
+Campo             Tipo       Descripción
+
+id              Integer    Identificador único
+nombre          String     Nombre del usuario
+email           String     Correo electrónico único
+telefono        String     Número de teléfono
+activo          Boolean    Indica si el usuario está activo
+es_admin        Boolean    Indica si tiene permisos de administrador
+creado_en       DateTime   Fecha de creación
+ultimo_acceso   DateTime   Último acceso del usuario
+
+Flujo básico
+
+Cliente
+   │
+   ▼
+FastAPI
+   │
+   ▼
+Routes
+   │
+   ▼
+Services
+   │
+   ▼
+SQLAlchemy
+   │
+   ▼
+SQLite
+
+Prueba rápida
+
+Después de iniciar el servidor:
+
+Abre http://127.0.0.1:8000/docs.
+
+Busca POST /users.
+
+Pulsa Try it out.
+
+Introduce los datos del usuario.
+
+Pulsa Execute.
+
+Utiliza GET /users para comprobar que el usuario fue registrado.
+
+
+
+Imagen de el inicio del programa.
+
+![alt text](image-2.png)
+
+Imagen del Swagger
+
+![alt text](image-3.png)
+
+Todos los endpoints
+
+![alt text](image-4.png)
+
+
+
 AUTOR:JUAN DAVID SALAZAR TORRES
 
 JUAN DAVID SALAZAR TORRES

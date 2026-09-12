@@ -1,74 +1,115 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
 from app.schemas.user_schema import UserCreate, UserPatch, UserResponse, UserUpdate
 
+from app.dependencies.database_dependency import obtener_db
+from app.models.user_model import Usuario
+
 router = APIRouter(prefix="/users", tags=["Usuarios"])
 
-usuarios_db = [
-    {"id": 1, "name": "Ana Torres", "email": "ana@correo.com", "role": "admin", "is_active": True},
-    {"id": 2, "name": "Luis Ramirez", "email": "luis@correo.com", "role": "user", "is_active": True},
-    {"id": 3, "name": "Camilo Sarrazola", "email": "camilo@correo.com", "role": "support", "is_active": False},
-]
-
-contador_id = 4
+def convertir_usuario(usuario: Usuario):
+    return {
+        "id": usuario.id,
+        "name": usuario.nombre,
+        "email": usuario.email,
+        "role": usuario.role,
+        "is_active": usuario.activo,
+    }
 
 
 @router.get("", response_model=List[UserResponse])
 def listar_usuarios(
     role: Optional[str] = Query(None, description="Filtrar por rol: admin, support o user"),
     is_active: Optional[bool] = Query(None, description="Filtrar por estado activo/inactivo"),
+    db: Session = Depends(obtener_db),
 ):
-    resultado = usuarios_db
+    usuarios = db.query(Usuario).all()
+
+    resultado = usuarios
 
     if role is not None:
-        resultado = [u for u in resultado if u["role"] == role]
+        resultado = [u for u in resultado if u.role == role]
 
     if is_active is not None:
-        resultado = [u for u in resultado if u["is_active"] == is_active]
+        resultado = [u for u in resultado if u.activo == is_active]
 
-    return resultado
+    return [
+        {
+            "id": u.id,
+            "name": u.nombre,
+            "email": u.email,
+            "role": u.role,
+            "is_active": u.activo,
+        }
+        for u in resultado
+    ]
+
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def obtener_usuario(user_id: int):
-    for usuario in usuarios_db:
-        if usuario["id"] == user_id:
-            return usuario
+def obtener_usuario(
+    user_id: int,
+    db: Session = Depends(obtener_db),
+):
+    usuario = db.query(Usuario).filter(
+        Usuario.id == user_id
+    ).first()
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"No existe un usuario con id {user_id}",
-    )
+    if usuario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No existe un usuario con id {user_id}",
+        )
 
+    return convertir_usuario(usuario)
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def crear_usuario(usuario: UserCreate):
-    global contador_id
+def crear_usuario(
+    usuario: UserCreate,
+    db: Session = Depends(obtener_db),
+):
+    correo_existente = db.query(Usuario).filter(
+        Usuario.email == usuario.email
+    ).first()
 
-    correo_existente = any(u["email"] == usuario.email for u in usuarios_db)
     if correo_existente:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ya existe un usuario registrado con el correo {usuario.email}",
         )
 
-    nuevo_usuario = usuario.model_dump()
-    nuevo_usuario["id"] = contador_id
-    contador_id += 1
+    nuevo_usuario = Usuario(
+        nombre=usuario.name,
+        email=usuario.email,
+        role=usuario.role,
+        activo=usuario.is_active,
+    )
 
-    usuarios_db.append(nuevo_usuario)
-    return nuevo_usuario
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+
+    return {
+        "id": nuevo_usuario.id,
+        "name": nuevo_usuario.nombre,
+        "email": nuevo_usuario.email,
+        "role": nuevo_usuario.role,
+        "is_active": nuevo_usuario.activo,
+    }
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-def actualizar_usuario(user_id: int, usuario: UserUpdate):
-    usuario_encontrado = None
-    for u in usuarios_db:
-        if u["id"] == user_id:
-            usuario_encontrado = u
-            break
+def actualizar_usuario(
+    user_id: int,
+    usuario: UserUpdate,
+    db: Session = Depends(obtener_db),
+):
+    usuario_encontrado = db.query(Usuario).filter(
+        Usuario.id == user_id
+    ).first()
 
     if usuario_encontrado is None:
         raise HTTPException(
@@ -76,30 +117,42 @@ def actualizar_usuario(user_id: int, usuario: UserUpdate):
             detail=f"No existe un usuario con id {user_id}",
         )
 
-    correo_en_uso = any(
-        u["email"] == usuario.email and u["id"] != user_id for u in usuarios_db
-    )
+    correo_en_uso = db.query(Usuario).filter(
+        Usuario.email == usuario.email,
+        Usuario.id != user_id
+    ).first()
+
     if correo_en_uso:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ya existe un usuario registrado con el correo {usuario.email}",
         )
 
-    usuario_encontrado["name"] = usuario.name
-    usuario_encontrado["email"] = usuario.email
-    usuario_encontrado["role"] = usuario.role
-    usuario_encontrado["is_active"] = usuario.is_active
+    usuario_encontrado.nombre = usuario.name
+    usuario_encontrado.email = usuario.email
+    usuario_encontrado.role = usuario.role
+    usuario_encontrado.activo = usuario.is_active
 
-    return usuario_encontrado
+    db.commit()
+    db.refresh(usuario_encontrado)
 
+    return {
+        "id": usuario_encontrado.id,
+        "name": usuario_encontrado.nombre,
+        "email": usuario_encontrado.email,
+        "role": usuario_encontrado.role,
+        "is_active": usuario_encontrado.activo,
+    }
 
 @router.patch("/{user_id}", response_model=UserResponse)
-def actualizar_usuario_parcial(user_id: int, usuario: UserPatch):
-    usuario_encontrado = None
-    for u in usuarios_db:
-        if u["id"] == user_id:
-            usuario_encontrado = u
-            break
+def actualizar_usuario_parcial(
+    user_id: int,
+    usuario: UserPatch,
+    db: Session = Depends(obtener_db),
+):
+    usuario_encontrado = db.query(Usuario).filter(
+        Usuario.id == user_id
+    ).first()
 
     if usuario_encontrado is None:
         raise HTTPException(
@@ -116,27 +169,49 @@ def actualizar_usuario_parcial(user_id: int, usuario: UserPatch):
         )
 
     if "email" in datos_actualizados:
-        correo_en_uso = any(
-            u["email"] == datos_actualizados["email"] and u["id"] != user_id
-            for u in usuarios_db
-        )
+        correo_en_uso = db.query(Usuario).filter(
+            Usuario.email == datos_actualizados["email"],
+            Usuario.id != user_id
+        ).first()
+
         if correo_en_uso:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Ya existe un usuario registrado con el correo {datos_actualizados['email']}",
             )
 
-    usuario_encontrado.update(datos_actualizados)
-    return usuario_encontrado
+    if "name" in datos_actualizados:
+        usuario_encontrado.nombre = datos_actualizados["name"]
+
+    if "email" in datos_actualizados:
+        usuario_encontrado.email = datos_actualizados["email"]
+
+    if "role" in datos_actualizados:
+        usuario_encontrado.role = datos_actualizados["role"]
+
+    if "is_active" in datos_actualizados:
+        usuario_encontrado.activo = datos_actualizados["is_active"]
+
+    db.commit()
+    db.refresh(usuario_encontrado)
+
+    return {
+        "id": usuario_encontrado.id,
+        "name": usuario_encontrado.nombre,
+        "email": usuario_encontrado.email,
+        "role": usuario_encontrado.role,
+        "is_active": usuario_encontrado.activo,
+    }
 
 
 @router.delete("/{user_id}")
-def eliminar_usuario(user_id: int):
-    usuario_encontrado = None
-    for u in usuarios_db:
-        if u["id"] == user_id:
-            usuario_encontrado = u
-            break
+def eliminar_usuario(
+    user_id: int,
+    db: Session = Depends(obtener_db),
+):
+    usuario_encontrado = db.query(Usuario).filter(
+        Usuario.id == user_id
+    ).first()
 
     if usuario_encontrado is None:
         raise HTTPException(
@@ -144,5 +219,9 @@ def eliminar_usuario(user_id: int):
             detail=f"No existe un usuario con id {user_id}",
         )
 
-    usuarios_db.remove(usuario_encontrado)
-    return {"detail": f"Usuario con id {user_id} eliminado correctamente"}
+    db.delete(usuario_encontrado)
+    db.commit()
+
+    return {
+        "detail": f"Usuario con id {user_id} eliminado correctamente"
+    }

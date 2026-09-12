@@ -10,6 +10,6 @@ class Usuario(Base):
     email = Column(String(255), nullable=False, unique=True)
     telefono = Column(String(20), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
-    es_admin = Column(Boolean, default=False, nullable=False)
+    role = Column(String(20), default="user", nullable=False)
     creado_en = Column(DateTime, default=datetime.now)
     ultimo_acceso = Column(DateTime, nullable=True)

@@ -13,3 +13,4 @@ class Usuario(Base):
     role = Column(String(20), default="user", nullable=False)
     creado_en = Column(DateTime, default=datetime.now)
     ultimo_acceso = Column(DateTime, nullable=True)
+    

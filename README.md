@@ -265,6 +265,29 @@ y se ajusto el codigo.
 Se borro el archivo users_db.py por consumo en memoria.
 
 
+Fase 10 PROYECTO-FINAL V1
+
+ALEMBIC
+
+CAPTURA EJECUCION "ALEMBIC INIT"
+
+![alt text](image-5.png)
+
+
+CAPTURA MIGRACION "ALEMBIC REVISION --AUTOGENERATE"
+
+![alt text](image-6.png)
+
+CAPTURA DE MIGRACION CON "ALEMBIC UPGRADE HEAD"
+
+![alt text](image-7.png)
+
+
+BASE DE DATOS 
+
+
+
+
 
 TECNOLOGIAS UTILIZADAS
 

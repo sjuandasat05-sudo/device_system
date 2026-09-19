@@ -1,6 +1,7 @@
 from sqlalchemy import Column,Integer,String,Boolean,DateTime
 from app.database.connection import Base
 from datetime import datetime
+from sqlalchemy.orm import relationship
 
 class Device(Base):
     __tablename__ = "devices"
@@ -15,5 +16,7 @@ class Device(Base):
     is_available = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    loans = relationship("Loan", back_populates="device")
+
 
 

@@ -2,7 +2,13 @@ from fastapi import FastAPI
  
 from app.routes.user_routes import router as user_router
 
+from app.routes.device_routes import router as device_router
+
+from app.routes.loan_routes import router as loan_router
+
 from app.database.connection import create_tables
+
+from app.models.loan_model import Loan
 
  
 app = FastAPI(
@@ -23,6 +29,10 @@ app = FastAPI(
 create_tables()
 
 app.include_router(user_router)
+
+app.include_router(device_router)
+
+app.include_router(loan_router)
  
  
 @app.get("/", tags=["Root"], summary="Estado de la API")

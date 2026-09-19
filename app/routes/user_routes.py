@@ -7,8 +7,14 @@ from app.schemas.user_schema import UserCreate, UserPatch, UserResponse, UserUpd
 
 from app.dependencies.database_dependency import obtener_db
 from app.models.user_model import Usuario
+from app.models.loan_model import Loan
 
-router = APIRouter(prefix="/users", tags=["Usuarios"])
+
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"]
+)
+
 
 def convertir_usuario(usuario: Usuario):
     return {
@@ -20,10 +26,28 @@ def convertir_usuario(usuario: Usuario):
     }
 
 
-@router.get("", response_model=List[UserResponse])
+# Obtener todos los usuarios
+@router.get(
+    "",
+    response_model=List[UserResponse],
+    summary="Obtener todos los usuarios",
+    description="Permite consultar todos los usuarios registrados en el sistema y filtrarlos por rol o estado activo.",
+    response_description="Lista de usuarios registrados",
+    responses={
+        422: {
+            "description": "Error de validación en los filtros enviados"
+        }
+    }
+)
 def listar_usuarios(
-    role: Optional[str] = Query(None, description="Filtrar por rol: admin, support o user"),
-    is_active: Optional[bool] = Query(None, description="Filtrar por estado activo/inactivo"),
+    role: Optional[str] = Query(
+        None,
+        description="Filtrar por rol: admin, support o user"
+    ),
+    is_active: Optional[bool] = Query(
+        None,
+        description="Filtrar por estado activo/inactivo"
+    ),
     db: Session = Depends(obtener_db),
 ):
     usuarios = db.query(Usuario).all()
@@ -48,8 +72,19 @@ def listar_usuarios(
     ]
 
 
-
-@router.get("/{user_id}", response_model=UserResponse)
+# Obtener un usuario específico
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Obtener un usuario",
+    description="Permite consultar la información de un usuario específico mediante su ID.",
+    response_description="Información del usuario solicitado",
+    responses={
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
+)
 def obtener_usuario(
     user_id: int,
     db: Session = Depends(obtener_db),
@@ -66,7 +101,24 @@ def obtener_usuario(
 
     return convertir_usuario(usuario)
 
-@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+
+# Crear un usuario
+@router.post(
+    "",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear un usuario",
+    description="Registra un nuevo usuario en el sistema utilizando la información proporcionada.",
+    response_description="Usuario creado correctamente",
+    responses={
+        400: {
+            "description": "El correo ya está registrado"
+        },
+        422: {
+            "description": "Error de validación en los datos enviados"
+        }
+    }
+)
 def crear_usuario(
     usuario: UserCreate,
     db: Session = Depends(obtener_db),
@@ -101,7 +153,25 @@ def crear_usuario(
     }
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+# Actualizar completamente un usuario
+@router.put(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Actualizar un usuario",
+    description="Actualiza completamente la información de un usuario existente mediante su ID.",
+    response_description="Usuario actualizado correctamente",
+    responses={
+        400: {
+            "description": "El correo ya está registrado"
+        },
+        404: {
+            "description": "Usuario no encontrado"
+        },
+        422: {
+            "description": "Error de validación en los datos enviados"
+        }
+    }
+)
 def actualizar_usuario(
     user_id: int,
     usuario: UserUpdate,
@@ -144,7 +214,26 @@ def actualizar_usuario(
         "is_active": usuario_encontrado.activo,
     }
 
-@router.patch("/{user_id}", response_model=UserResponse)
+
+# Actualización parcial
+@router.patch(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Actualizar parcialmente un usuario",
+    description="Permite modificar uno o varios datos de un usuario existente sin enviar toda la información.",
+    response_description="Usuario actualizado parcialmente",
+    responses={
+        400: {
+            "description": "No se enviaron campos para actualizar o el correo ya está registrado"
+        },
+        404: {
+            "description": "Usuario no encontrado"
+        },
+        422: {
+            "description": "Error de validación en los datos enviados"
+        }
+    }
+)
 def actualizar_usuario_parcial(
     user_id: int,
     usuario: UserPatch,
@@ -204,7 +293,36 @@ def actualizar_usuario_parcial(
     }
 
 
-@router.delete("/{user_id}")
+# Obtener préstamos de un usuario
+@router.get(
+    "/{user_id}/loans",
+    summary="Obtener préstamos de un usuario",
+    description="Consulta todos los préstamos asociados a un usuario específico.",
+    response_description="Lista de préstamos del usuario"
+)
+def obtener_prestamos_usuario(
+    user_id: int,
+    db: Session = Depends(obtener_db),
+):
+    prestamos = db.query(Loan).where(
+        Loan.user_id == user_id
+    ).all()
+
+    return prestamos
+
+
+# Eliminar un usuario
+@router.delete(
+    "/{user_id}",
+    summary="Eliminar un usuario",
+    description="Elimina un usuario existente mediante su ID.",
+    response_description="Confirmación de eliminación del usuario",
+    responses={
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
+)
 def eliminar_usuario(
     user_id: int,
     db: Session = Depends(obtener_db),

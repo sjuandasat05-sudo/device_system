@@ -283,7 +283,52 @@ CAPTURA DE MIGRACION CON "ALEMBIC UPGRADE HEAD"
 ![alt text](image-7.png)
 
 
-BASE DE DATOS 
+CREAR USUARIO - POST/users
+
+![alt text](image-8.png)
+
+CREAR DISPOSITIVO - POST/DEVICES
+
+![alt text](image-9.png)
+
+CREAR PRESTAMOS -POST/LOANS
+
+![alt text](image-10.png)
+
+INTENTAR PRESTAR UN DISPOSITIVO NO DISPONIBLE - POST / LOANS
+
+![alt text](image-11.png)
+
+Listar préstamos con información de usuario y dispositivo - GET /LOANS/DETAILS
+
+![alt text](image-12.png)
+
+FILTRAR PRESTAMOS POR ESTADO - GET /LOANS
+
+![alt text](image-13.png)
+
+FILTRAR PRESTAMOS POR TIPO DE DISPOSITIVO - GET /LOANS
+
+![alt text](image-14.png)
+
+CONSULTAR PRESTAMOS DE USUARIO - GET /USER /{USER_ID}/LOANS
+
+![alt text](image-15.png)
+
+PATCH /LOANS/{LOANS_ID}/RETURN
+
+![alt text](image-16.png)
+
+
+VALIDAR EL DISPOSITIVO DESPONIBLE - GET /DEVICES /{DEVICES_ID}
+
+![alt text](image-17.png)
+
+CONSULTAR EL HISTORIAL DE PRESTAMOS DEL DISPOSITIVO - GET /DEVICES /{DEVICES_ID}/LOAN
+
+![alt text](image-18.png)
+
+
 
 
 

@@ -12,3 +12,6 @@ __pycache__/
 
 # Configuración local de VS Code
 .vscode/
+
+# Variables de entorno
+.env

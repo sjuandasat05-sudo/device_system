@@ -15,3 +15,7 @@ __pycache__/
 
 # Variables de entorno
 .env
+
+# Base de datos local
+*.db
+*.db.backup

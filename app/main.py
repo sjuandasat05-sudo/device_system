@@ -1,16 +1,15 @@
 from fastapi import FastAPI
- 
+
+from app.auth.auth_routes import router as auth_router
+
 from app.routes.user_routes import router as user_router
-
 from app.routes.device_routes import router as device_router
-
 from app.routes.loan_routes import router as loan_router
 
 from app.database.connection import create_tables
-
 from app.models.loan_model import Loan
 
- 
+
 app = FastAPI(
     title="device_systems API",
     description=(
@@ -28,14 +27,14 @@ app = FastAPI(
 
 create_tables()
 
+app.include_router(auth_router)
 app.include_router(user_router)
-
 app.include_router(device_router)
-
 app.include_router(loan_router)
- 
- 
+
+
 @app.get("/", tags=["Root"], summary="Estado de la API")
 def root():
-    return {"message": "device_systems API activa. Visita /docs para la documentación."}
- 
+    return {
+        "message": "device_systems API activa. Visita /docs para la documentación."
+    }

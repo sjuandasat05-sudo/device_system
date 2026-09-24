@@ -16,6 +16,8 @@ config = context.config
 # for 'autogenerate' support
 from app.database.connection import Base
 from app.models.user_model import Usuario
+from app.models.device_model import Device
+from app.models.loan_model import Loan
 
 target_metadata = Base.metadata
 

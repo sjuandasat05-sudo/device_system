@@ -1,7 +1,10 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.schemas.user_schema import UserCreate, UserPatch, UserResponse, UserUpdate
 
@@ -9,10 +12,17 @@ from app.dependencies.database_dependency import obtener_db
 from app.models.user_model import Usuario
 from app.models.loan_model import Loan
 
+from app.dependencies.auth_dependency import get_current_active_user
+
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
+)
+
+
+limiter = Limiter(
+    key_func=get_remote_address
 )
 
 
@@ -39,7 +49,9 @@ def convertir_usuario(usuario: Usuario):
         }
     }
 )
+@limiter.limit("30/minute")
 def listar_usuarios(
+    request: Request,
     role: Optional[str] = Query(
         None,
         description="Filtrar por rol: admin, support o user"
@@ -49,6 +61,7 @@ def listar_usuarios(
         description="Filtrar por estado activo/inactivo"
     ),
     db: Session = Depends(obtener_db),
+    current_user: Usuario = Depends(get_current_active_user),
 ):
     usuarios = db.query(Usuario).all()
 
@@ -88,6 +101,7 @@ def listar_usuarios(
 def obtener_usuario(
     user_id: int,
     db: Session = Depends(obtener_db),
+    current_user: Usuario = Depends(get_current_active_user),
 ):
     usuario = db.query(Usuario).filter(
         Usuario.id == user_id
@@ -122,6 +136,7 @@ def obtener_usuario(
 def crear_usuario(
     usuario: UserCreate,
     db: Session = Depends(obtener_db),
+    current_user: Usuario = Depends(get_current_active_user),
 ):
     correo_existente = db.query(Usuario).filter(
         Usuario.email == usuario.email

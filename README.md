@@ -331,7 +331,55 @@ CONSULTAR EL HISTORIAL DE PRESTAMOS DEL DISPOSITIVO - GET /DEVICES /{DEVICES_ID}
 
 PROYECTO FINAL - EV11
 
+POST /auth/register
 
+![alt text](image-19.png)
+
+POST /auth/register
+
+![alt text](image-20.png)
+
+POST /auth/register
+
+![alt text](image-21.png)
+
+POST /auth/login
+
+![alt text](image-22.png)
+
+POST /auth/login
+
+![alt text](image-23.png)
+
+GET /auth/me
+
+![alt text](image-24.png)
+
+GET /users
+
+![alt text](image-25.png)
+
+GET /users
+
+![alt text](image-26.png)
+
+POST /devices/
+
+![alt text](image-27.png)
+
+POST /devices/
+
+![alt text](image-28.png)
+
+PRUEBA 11
+
+![alt text](image-29.png)
+
+PRUEBA 12
+
+![alt text](image-30.png)
+
+PRUEBA 13
 
 
 

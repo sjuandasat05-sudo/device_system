@@ -1,15 +1,28 @@
 from app.models.loan_model import Loan
 from app.dependencies.database_dependency import obtener_db
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from app.models.user_model import Usuario
 from app.models.device_model import Device
 from app.schemas.loan_schema import LoanCreate
 from datetime import datetime
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+from app.dependencies.auth_dependency import (
+    get_current_active_user,
+    require_admin_or_support
+)
+
 
 router = APIRouter(
     prefix="/loans",
     tags=["Loans"]
+)
+
+
+limiter = Limiter(
+    key_func=get_remote_address
 )
 
 
@@ -161,9 +174,12 @@ def get_loan(
         }
     }
 )
+@limiter.limit("10/minute")
 def create_loan(
+    request: Request,
     loan: LoanCreate,
-    db=Depends(obtener_db)
+    db=Depends(obtener_db),
+    current_user=Depends(get_current_active_user)
 ):
     user = db.query(Usuario).filter(
         Usuario.id == loan.user_id
@@ -226,7 +242,8 @@ def create_loan(
 )
 def return_loan(
     loan_id: int,
-    db=Depends(obtener_db)
+    db=Depends(obtener_db),
+    current_user=Depends(require_admin_or_support)
 ):
     loan = db.query(Loan).filter(
         Loan.id == loan_id

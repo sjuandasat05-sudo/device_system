@@ -1,11 +1,18 @@
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator, EmailStr
 
 
 class UserRegister(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=100)
-    email: str = Field(...)
+    email: EmailStr = Field(...)
     password: str = Field(..., min_length=8)
     role: str = Field(...)
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, role):
+        if role not in ["admin", "user","support"]:
+            raise ValueError("Rol no válido")
+
+        return role
 
     @field_validator("password")
     @classmethod

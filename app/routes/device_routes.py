@@ -10,6 +10,10 @@ from app.schemas.device_schema import (
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.loan_model import Loan
+from app.dependencies.auth_dependency import (
+    require_admin_or_support,
+    require_admin
+)
 
 
 router = APIRouter(
@@ -81,7 +85,8 @@ def get_device(
 )
 def create_device(
     device: DeviceCreate,
-    db=Depends(obtener_db)
+    db=Depends(obtener_db),
+    current_user=Depends(require_admin_or_support)
 ):
     new_device = Device(
         name=device.name,
@@ -131,7 +136,8 @@ def create_device(
 def update_device(
     device_id: int,
     device: DeviceUpdate,
-    db=Depends(obtener_db)
+    db=Depends(obtener_db),
+    current_user=Depends(require_admin_or_support)
 ):
     existing_device = db.query(Device).filter(
         Device.id == device_id
@@ -236,7 +242,8 @@ def patch(
 )
 def delete(
     device_id: int,
-    db=Depends(obtener_db)
+    db=Depends(obtener_db),
+    current_user=Depends(require_admin)
 ):
     existing_device = db.query(Device).filter(
         Device.id == device_id
